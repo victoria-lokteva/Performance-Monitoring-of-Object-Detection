@@ -6,38 +6,17 @@ import numpy as np
 import torchvision.transforms as transforms
 
 
-def flatten(tensor):
-    return tensor.view(tensor.size(0), -1)
+def statistical_pooling(tensor):
+    std = torch.std(tensor, dim=(0, 1))
+    return std
 
-def max_pooling(tensor, num_channels=384):
-    result = []
-    for channel in range(num_channels):
-        one_chan_map = tensor[:,:,channel]
-        one_chan_map = flatten(one_chan_map)
-        maximum = one_chan_map.max()
-        result = torch.cat((result, maximum))
-    return result
-
-def mean_pooling(tensor, num_channels=384):
-    result = []
-    for channel in range(num_channels):
-        one_chan_map = tensor[:,:,channel]
-        one_chan_map = flatten(one_chan_map)
-        mean = one_chan_map.mean()
-        result = torch.cat((result, mean))
-    return result
-
-def statistical_pooling(tensor, num_channels=384):
-    result = []
-    for channel in range(num_channels):
-        one_chan_map = tensor[:,:,channel]
-        one_chan_map = flatten(one_chan_map)
-        std = one_chan_map.std()
-    result = torch.cat((result, std))
-    return result
-
-def mean_max_std(img):
-    return torch.cat((mean_pooling(img), max_pooling(img), statistical_pooling(img)))
+def mean_max_std(tensor, width=48, height=48):
+    t = tensor.permute(2,0,1)
+    mean_pool = torch.nn.AvgPool2d(kernel_size=(width, height))
+    max_pool = torch.nn.MaxPool2d(kernel_size=(width, height))
+    mean = mean_pool(t).view(-1)
+    maximum = max_pool(t).view(-1)
+    return torch.cat((mean, maximum, statistical_pooling(tensor)))
 
 class Alert(nn.Module):
     def __init__(self, mean_max_std, num_channels):
