@@ -40,13 +40,20 @@ class Dataset(torch.utils.data.Dataset):
 
 def test(net, test_loader):
     device = torch.device('cuda' if torch.cuda.is_available else 'cpu')
+    correct =0
+    total = 0
     predictions = []
     test_loader = iter(test_loader)
     with torch.no_grad():
-        for idx, image in enumerate(test_loader):
+        for idx, (image, label) in enumerate(test_loader):
             image = image.to(device)
+            label = label.to(device)
             pred = net.forward(image)
             predictions.append(pred)
+
+            total += label.size(0)
+            correct += (pred==label).sum().item()
+            print('Accuracy: %0.3f %% ' % (100*correct/total))
     return predictions
 
 def train(net, data_loader, lr=0.001, num_epoch=20):
