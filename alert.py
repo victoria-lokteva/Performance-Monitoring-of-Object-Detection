@@ -19,14 +19,15 @@ class Alert(nn.Module):
         self.fc5 = nn.Linear(in_features=1, out_features=1)
 
     def statistical_pooling(x):
-        std = torch.std(x, dim=(3, 2))
-        # (B*C*H*W) -> (B*C)
+        std = torch.std(x, dim=(3, 2))  # (B*C*H*W) -> (B*C)
         return std
 
     def mean_max_std(self, x):
-        mean = self.mean_pool(x) # (B*C*1*1)
+        mean = self.mean_pool(x) # -> (B*C*1*1)
+        mean = mean.squeeze() # -> (B*C)
         maximum = self.max_pool(x)
-        return torch.cat((mean, maximum, self.statistical_pooling(x)))
+        maximum = maximum.squeeze()
+        return torch.cat((mean, maximum, self.statistical_pooling(x)), dim=1) #-> (B*(3*C))
 
     def forward(self, x):
         x = self.mean_max_std(x)

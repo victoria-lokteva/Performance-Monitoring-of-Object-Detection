@@ -9,7 +9,6 @@ def random_seed(rs=10):
     torch.cuda.manual_seed(rs)
     torch.backends.cudnn.deterministic = True
 
-
 class Dataset(torch.utils.data.Dataset):
 
     def __init__(self, images_file, labels_file, transforms):
@@ -39,7 +38,8 @@ class Dataset(torch.utils.data.Dataset):
         return image, label
 
 
-def test(net):
+def test(net, test_loader):
+    device = torch.device('cuda' if torch.cuda.is_available else 'cpu')
     predictions = []
     test_loader = iter(test_loader)
     with torch.no_grad():
@@ -49,12 +49,12 @@ def test(net):
             predictions.append(pred)
     return predictions
 
-def train(net, lr=0.001, num_epoch=20):
+def train(net, data_loader, lr=0.001, num_epoch=20):
 
-    device = torch.device('cuda') if torch.cuda.is_available else torch.device('cpu')
+    device = torch.device('cuda' if torch.cuda.is_available else 'cpu')
     loss_func = torch.nn.BCELoss()
     optimizer = torch.optim.Adam(net.parameters(), lr=lr)
-    scheduler = torch.optim.lr_scheduler.StepLR(optimizer=optimizer, step_size=4)
+    scheduler = torch.optim.lr_scheduler.StepLR(optimizer=optimizer, step_size=10)
     train_loader = iter(data_loader)
     net = net.to(device)
 
