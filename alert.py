@@ -1,17 +1,13 @@
 import torch
-import torchvision
 from torch import nn as nn
 import torch.nn.functional as F
-import numpy as np
-import torchvision.transforms as transforms
 
 
 class Alert(nn.Module):
-    def __init__(self, mean_max_std, width=48, height=48):
+    def __init__(self, width=48, height=48):
         super().__init__()
         self.mean_pool = torch.nn.AvgPool2d(kernel_size=(width, height))
         self.max_pool = torch.nn.MaxPool2d(kernel_size=(width, height))
-        self.mean_max_std = mean_max_std()
         self.fc1 = nn.Linear(in_features=384*3, out_features=384)
         self.bn1 = nn.BatchNorm2d(384)
         self.fc2 = nn.Linear(in_features=384, out_features=96)
@@ -23,13 +19,14 @@ class Alert(nn.Module):
         self.fc5 = nn.Linear(in_features=1, out_features=1)
 
     def statistical_pooling(x):
-        std = torch.std(x, dim=1)
+        std = torch.std(x, dim=(3, 2))
+        # (B*C*H*W) -> (B*C)
         return std
 
-    def mean_max_std(x):
-        mean = self.mean_pool(x).view(-1)
-        maximum = self.max_pool(x).view(-1)
-        return torch.cat((mean, maximum, statistical_pooling(x)))
+    def mean_max_std(self, x):
+        mean = self.mean_pool(x) # (B*C*1*1)
+        maximum = self.max_pool(x)
+        return torch.cat((mean, maximum, self.statistical_pooling(x)))
 
     def forward(self, x):
         x = self.mean_max_std(x)
