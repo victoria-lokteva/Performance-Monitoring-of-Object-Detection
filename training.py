@@ -23,6 +23,7 @@ class Dataset(torch.utils.data.Dataset):
             self.labels = f.readlines()
             self.labels = [label[:-1] for label in self.labels]
             self.labels = [float(label) for label in self.labels]
+            self.labels = torch.Tensor(self.labels)
 
     def __iter__(self, x):
         return iter(x)
