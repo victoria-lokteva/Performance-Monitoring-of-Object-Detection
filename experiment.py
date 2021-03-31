@@ -15,4 +15,4 @@ test_loader = torch.utils.data.DataLoader(test_data, batch_size)
 
 net = Alert()
 
-train(net)
+train(net, data_loader, test_loader)

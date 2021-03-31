@@ -1,6 +1,8 @@
 import numpy as np
 import torch
 from PIL import Image
+from tqdm import tqdm_notebook
+from sklearn.metrics import precision_score, recall_score, roc_auc_score
 
 
 def random_seed(rs=10):
@@ -8,6 +10,7 @@ def random_seed(rs=10):
     torch.manual_seed(rs)
     torch.cuda.manual_seed(rs)
     torch.backends.cudnn.deterministic = True
+
 
 class Dataset(torch.utils.data.Dataset):
 
@@ -39,35 +42,52 @@ class Dataset(torch.utils.data.Dataset):
         return image, label
 
 
-def test(net, test_loader):
+def test(net, test_loader, threshold=1):
     device = torch.device('cuda' if torch.cuda.is_available else 'cpu')
-    correct =0
+    loss_func = torch.nn.BCELoss()
+    correct = 0
     total = 0
     predictions = []
     test_loader = iter(test_loader)
+    net = net.eval()
     with torch.no_grad():
-        for idx, (image, label) in enumerate(test_loader):
+        for idx, (image, label) in tqdm_notebook(enumerate(test_loader)):
             image = image.to(device)
             label = label.to(device)
             pred = net.forward(image)
+            pred = pred >= threshold
+
+            loss = loss_func(pred, label)
+
             predictions.append(pred)
 
+            accuracy = 100 * correct / total
+            precision = precision_score(label, predictions)
+            recall = recall_score(label, predictions)
+            f1 = 2 * (recall * precision) / (recall + precision)
+            RocAuc = roc_auc_score(label, predictions)
+
             total += label.size(0)
-            correct += (pred==label).sum().item()
-            print('Accuracy: %0.3f %% ' % (100*correct/total))
-    return predictions
+            correct += int((pred == label)).sum().item()
+            print('Accuracy: %0.3f %% ' % (accuracy),
+                  'Precision: %0.3f %% ' % (precision),
+                  'Recall: %0.3f %% ' % (recall),
+                  'F1: %0.3f %% ' % (f1),
+                  'RocAUC: %0.3f %% ' % (RocAuc)
+                  )
+    return precision, recall, f1, RocAuc
 
-def train(net, data_loader, lr=0.001, num_epoch=20):
 
+def train(net, data_loader, test_loader, lr=0.001, num_epoch=20):
     device = torch.device('cuda' if torch.cuda.is_available else 'cpu')
     loss_func = torch.nn.BCELoss()
     optimizer = torch.optim.Adam(net.parameters(), lr=lr)
     scheduler = torch.optim.lr_scheduler.StepLR(optimizer=optimizer, step_size=10)
     train_loader = iter(data_loader)
     net = net.to(device)
-
+    best = 0
     for epoch in range(num_epoch):
-        for idx, (image, label) in enumerate(train_loader):
+        for idx, (image, label) in tqdm_notebook(enumerate(train_loader)):
             image = image.to(device)
             label = label.to(device)
             optimizer.zero_grad()
@@ -77,5 +97,13 @@ def train(net, data_loader, lr=0.001, num_epoch=20):
             optimizer.step()
             scheduler.step()
 
-        test(net)
+        _, _, f1, _ = test(net, test_loader)
+        current = f1
+        if current > best:
+            best = current
+            dict = {}
+            dict["model"] = net.state_dict()
+            dict['optimizer'] = optimizer.state_dict()
+            dict['scheduler'] = scheduler.state_dict()
+            torch.save('./model.pt', dict)
     return net
