@@ -2,7 +2,7 @@ import numpy as np
 import torch
 from PIL import Image
 from tqdm import tqdm_notebook
-from sklearn.metrics import precision_score, recall_score, roc_auc_score
+from sklearn.metrics import accuracy_score, precision_score, recall_score, roc_auc_score
 
 
 def random_seed(rs=10):
@@ -45,8 +45,8 @@ class Dataset(torch.utils.data.Dataset):
 def test(net, test_loader, threshold=1):
     device = torch.device('cuda' if torch.cuda.is_available else 'cpu')
     loss_func = torch.nn.BCELoss()
-    correct = 0
-    total = 0
+   # correct = 0
+  #  total = 0
     predictions = []
     test_loader = iter(test_loader)
     net = net.eval()
@@ -61,21 +61,24 @@ def test(net, test_loader, threshold=1):
 
             predictions.append(pred)
 
-            accuracy = 100 * correct / total
-            precision = precision_score(label, predictions)
-            recall = recall_score(label, predictions)
-            f1 = 2 * (recall * precision) / (recall + precision)
-            RocAuc = roc_auc_score(label, predictions)
+            labels = label.numpy()
+            predictions_np = [np.argmax(pred.detach().numpy(), axis=1) for pred in predictions]
 
-            total += label.size(0)
-            correct += int((pred == label)).sum().item()
+            accuracy = accuracy_score(labels, predictions_np)
+            precision = precision_score(labels, predictions_np)
+            recall = recall_score(labels, predictions_np)
+            f1 = 2 * (recall * precision) / (recall + precision)
+            rocauc = roc_auc_score(labels, predictions_np)
+
+            #total += label.size(0)
+           # correct += int((pred == label)).sum().item()
             print('Accuracy: %0.3f %% ' % (accuracy),
                   'Precision: %0.3f %% ' % (precision),
                   'Recall: %0.3f %% ' % (recall),
                   'F1: %0.3f %% ' % (f1),
-                  'RocAUC: %0.3f %% ' % (RocAuc)
+                  'RocAUC: %0.3f %% ' % (rocauc)
                   )
-    return precision, recall, f1, RocAuc
+    return precision, recall, f1, rocauc
 
 
 def train(net, data_loader, test_loader, lr=0.001, num_epoch=20):
@@ -97,7 +100,7 @@ def train(net, data_loader, test_loader, lr=0.001, num_epoch=20):
             optimizer.step()
             scheduler.step()
 
-        _, _, f1, _ = test(net, test_loader)
+        precision, recall, f1, rocauc = test(net, test_loader)
         current = f1
         if current > best:
             best = current
@@ -105,5 +108,9 @@ def train(net, data_loader, test_loader, lr=0.001, num_epoch=20):
             dict["model"] = net.state_dict()
             dict['optimizer'] = optimizer.state_dict()
             dict['scheduler'] = scheduler.state_dict()
-            torch.save('./model.pt', dict)
+            dict['Precision'] = precision
+            dict['Recall'] = recall
+            dict['F1'] = f1
+            dict['RocAUC'] = rocauc
+            torch.save(dict, './model.pt')
     return net
