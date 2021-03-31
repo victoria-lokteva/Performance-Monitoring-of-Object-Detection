@@ -49,7 +49,7 @@ The alert system algorithm is illustrated on the flowchart below:
 
 * **Max Pooling**
 
-Max pooling selects the maximum pixel value of the input matrix.
+Max pooling selects the brightest pixel of the input matrix.
 It allows to retain the most prominent features of the feature map like edges. However, it rejects a sufficient amount of information, 
 missing out on some details.
 Max pooling is also extremely effective in cases of objects placed on a dark background.
@@ -57,8 +57,8 @@ Max pooling is also extremely effective in cases of objects placed on a dark bac
 * **Average (Mean) Pooling**
 
 Average pooling calculates the mean of pixel values of the input matrix.
-This operation smooths out the image and has a blurring effect retaining the average values of features. However, average pooling might not be able
-to extract important features because it tries to take everything into account. Unlike max pooling, it is irrespective of background.
+This operation smooths out the image and has a blurring effect retaining the average values of features. Therefore, average pooling sometimes can not identify sharp features.
+It also might not be able to extract important features because it tries to take everything into account. Unlike max pooling, it is irrespective of background.
 
 * **Statistical Pooling**
 
