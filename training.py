@@ -52,7 +52,7 @@ def test(net, test_loader, threshold=1):
     test_loader = iter(test_loader)
     net = net.eval()
     with torch.no_grad():
-        for idx, (image, label) in tqdm_notebook(enumerate(test_loader)):
+        for idx, (image, label) in enumerate(tqdm_notebook(test_loader)):
             image = image.to(device)
             label = label.to(device)
             pred = net.forward(image)
@@ -90,8 +90,8 @@ def train(net, data_loader, test_loader, lr=0.001, num_epoch=20):
     train_loader = iter(data_loader)
     net = net.to(device)
     best = 0
-    for epoch in range(num_epoch):
-        for idx, (image, label) in tqdm_notebook(enumerate(train_loader)):
+    for epoch in tqdm_notebook(range(num_epoch)):
+        for idx, (image, label) in enumerate(tqdm_notebook(train_loader)):
             image = image.to(device)
             label = label.to(device)
             optimizer.zero_grad()
