@@ -1,10 +1,13 @@
+project: alert_system
+experiment_name: training_alert
+savepath:
 
-
-dataset:
-  images_file:
-  labels_file:
-
-train:
+experiment:
+  filename_img:
+  filename_labels:
+  test_filename_img:
+  test_filename_labels:
+  batch_size: 12
   num_epochs: 100
-  lr: 0.001
-
+  lr: 0.001   
+  initialization: 'normal'
