@@ -58,18 +58,16 @@ def test(net, test_loader, threshold=1):
             pred = net.forward(image)
             pred = pred >= threshold
 
-            loss = loss_func(pred, label)
+            loss = loss_func(pred, label.unsqueeze(1))
 
             predictions.append(pred)
 
-            labels = label.numpy()
-            predictions_np = [np.argmax(pred.detach().numpy(), axis=1) for pred in predictions]
 
-            accuracy = accuracy_score(labels, predictions_np)
-            precision = precision_score(labels, predictions_np)
-            recall = recall_score(labels, predictions_np)
+            accuracy = accuracy_score(label.unsqueeze(1), pred)
+            precision = precision_score(label.unsqueeze(1), pred)
+            recall = recall_score(label.unsqueeze(1), pred)
             f1 = 2 * (recall * precision) / (recall + precision)
-            rocauc = roc_auc_score(labels, predictions_np)
+            rocauc = roc_auc_score(label.unsqueeze(1), pred)
 
             # total += label.size(0)
             # correct += int((pred == label)).sum().item()
@@ -96,7 +94,8 @@ def train(net, data_loader, test_loader, lr=0.001, num_epoch=20):
             label = label.to(device)
             optimizer.zero_grad()
             outputs = net(image)
-            loss = loss_func(outputs, label)
+            loss = loss_func(outputs, label.unsqueeze(1))
+            # outputs - > tensor[4,1],  label -> [4], label.unsqueze(1) ->[4,1]
             loss.backward()
             optimizer.step()
             scheduler.step()
