@@ -10,25 +10,33 @@ class Alert(nn.Module):
             initialize_weights = nn.init.xavier_normal()
         elif initialization == 'uniform':
             initialize_weights = nn.init.xavier_uniform()
+        elif initialization is None:
+            pass
         else:
             raise Exception('There is no such initialization')
 
         self.mean_pool = torch.nn.AvgPool2d(kernel_size=(width, height))
         self.max_pool = torch.nn.MaxPool2d(kernel_size=(width, height))
         self.fc1 = nn.Linear(in_features=384*3, out_features=384)
-        initialize_weights(self.fc1.weight)
+
         self.bn1 = nn.BatchNorm1d(384)
         self.fc2 = nn.Linear(in_features=384, out_features=96)
-        initialize_weights(self.fc2.weight)
+
         self.bn2 = nn.BatchNorm1d(96)
         self.fc3 = nn.Linear(in_features=96, out_features=12)
-        initialize_weights(self.fc3.weight)
+
         self.bn3 = nn.BatchNorm1d(12)
         self.fc4 = nn.Linear(in_features=12, out_features=1)
-        initialize_weights(self.fc4.weight)
+
         self.bn4 = nn.BatchNorm1d(1)
         self.fc5 = nn.Linear(in_features=1, out_features=1)
-        initialize_weights(self.fc5.weight)
+
+        if initialization is not None:
+            initialize_weights(self.fc1.weight)
+            initialize_weights(self.fc2.weight)
+            initialize_weights(self.fc3.weight)
+            initialize_weights(self.fc4.weight)
+            initialize_weights(self.fc5.weight)
 
     def statistical_pooling(x):
         std = torch.std(x, dim=(3, 2))  # (B*C*H*W) -> (B*C)
@@ -53,3 +61,4 @@ class Alert(nn.Module):
         x = self.bn4(x)
         x = F.sigmoid(self.fc5(x))
         return x
+
