@@ -38,7 +38,7 @@ class Alert(nn.Module):
             initialize_weights(self.fc4.weight)
             initialize_weights(self.fc5.weight)
 
-    def statistical_pooling(x):
+    def statistical_pooling(self, x):
         std = torch.std(x, dim=(3, 2))  # (B*C*H*W) -> (B*C)
         return std
 
@@ -47,7 +47,8 @@ class Alert(nn.Module):
         mean = mean.squeeze() # -> (B*C)
         maximum = self.max_pool(x)
         maximum = maximum.squeeze()
-        return torch.cat((mean, maximum, self.statistical_pooling(x)), dim=1) #-> (B*(3*C))
+        std = self.statistical_pooling(x)
+        return torch.cat((mean, maximum, std), dim=1) #-> (B*(3*C))
 
     def forward(self, x):
         x = self.mean_max_std(x)

@@ -1,18 +1,21 @@
 import torch
 import torchvision.transforms as transforms
+import wandb
 from training import  random_seed, Dataset, train
 from alert import Alert
 
 random_seed(10)
 
-transforms = transforms.Compose([transforms.Resize((48, 48)), transforms.ToTensor()])
+wandb.init(name='training', project='alert')
 
-train_data = Dataset(filename_img, filename_labels, transforms)
-test_data = Dataset(ilename_img, filename_labels, transforms)
+transform = transforms.Compose([transforms.Resize((48, 48)), transforms.ToTensor()])
 
-data_loader = torch.utils.data.DataLoader(train_data, batch_size)
-test_loader = torch.utils.data.DataLoader(test_data, batch_size)
+train_data = Dataset('filename_img', 'filename_labels', transform)
+test_data = Dataset('test_filename_img', 'test_filename_labels', transform)
 
-net = Alert()
+data_loader = torch.utils.data.DataLoader(train_data, 'batch_size')
+test_loader = torch.utils.data.DataLoader(test_data, 'batch_size')
+
+net = Alert('initialization')
 
 train(net, data_loader, test_loader)

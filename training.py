@@ -3,6 +3,7 @@ import torch
 from PIL import Image
 from tqdm import tqdm_notebook
 from sklearn.metrics import accuracy_score, precision_score, recall_score, roc_auc_score
+import wandb
 
 
 def random_seed(rs=10):
@@ -14,11 +15,11 @@ def random_seed(rs=10):
 
 class Dataset(torch.utils.data.Dataset):
 
-    def __init__(self, images_file, labels_file, transforms):
+    def __init__(self, images_file, labels_file, transform):
         super().__init__()
         self.images_file = images_file
         self.labels_file = labels_file
-        self.transform = transforms
+        self.transform = transform
         with open(self.images_file, 'r') as f:
             self.roots = f.readlines()
             self.roots = [root[:-1] for root in self.roots]
@@ -45,8 +46,8 @@ class Dataset(torch.utils.data.Dataset):
 def test(net, test_loader, threshold=1):
     device = torch.device('cuda' if torch.cuda.is_available else 'cpu')
     loss_func = torch.nn.BCELoss()
-   # correct = 0
-  #  total = 0
+    # correct = 0
+    #  total = 0
     predictions = []
     test_loader = iter(test_loader)
     net = net.eval()
@@ -70,8 +71,8 @@ def test(net, test_loader, threshold=1):
             f1 = 2 * (recall * precision) / (recall + precision)
             rocauc = roc_auc_score(labels, predictions_np)
 
-            #total += label.size(0)
-           # correct += int((pred == label)).sum().item()
+            # total += label.size(0)
+            # correct += int((pred == label)).sum().item()
             print('Accuracy: %0.3f %% ' % (accuracy),
                   'Precision: %0.3f %% ' % (precision),
                   'Recall: %0.3f %% ' % (recall),
@@ -113,4 +114,8 @@ def train(net, data_loader, test_loader, lr=0.001, num_epoch=20):
             dict['F1'] = f1
             dict['RocAUC'] = rocauc
             torch.save(dict, './model.pt')
+
+        wandb.log({'Epoch': epoch,
+                   'Train_loss': loss
+                   })
     return net
