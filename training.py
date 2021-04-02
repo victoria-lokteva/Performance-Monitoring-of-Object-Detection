@@ -64,7 +64,7 @@ def test(net, test_loader, threshold=0.51):
             pred = pred >= threshold
             pred = pred.float()
 
-            loss = loss_func(pred, label.unsqueeze(1))
+            test_loss = loss_func(pred, label.unsqueeze(1))
 
             predictions = torch.cat((predictions, pred))
             predictions_prob = torch.cat((predictions_prob, pred_prob))
@@ -84,7 +84,7 @@ def test(net, test_loader, threshold=0.51):
           'RocAUC: %0.3f %% ' % (rocauc)
           )
 
-    return precision, recall, f1, rocauc
+    return precision, recall, f1, rocauc, test_loss
 
 
 def train(net, data_loader, test_loader, lr=0.001, num_epoch=20):
@@ -107,7 +107,7 @@ def train(net, data_loader, test_loader, lr=0.001, num_epoch=20):
             optimizer.step()
             scheduler.step()
 
-        precision, recall, f1, rocauc = test(net, test_loader)
+        precision, recall, f1, rocauc, test_loss = test(net, test_loader)
         current = f1
         if current > best:
             best = current
@@ -122,6 +122,11 @@ def train(net, data_loader, test_loader, lr=0.001, num_epoch=20):
             torch.save(dict, './model.pt')
 
         wandb.log({'Epoch': epoch,
-                   'Train_loss': loss
+                   'Train_loss': loss,
+                   'Test_loss' : test_loss,
+                   'Precision' : precision,
+                   'Recall' : recall,
+                   'F1' : f1,
+                   'RocAUC': rocauc
                    })
     return net

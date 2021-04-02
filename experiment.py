@@ -6,7 +6,7 @@ from alert import Alert
 
 random_seed(10)
 
-wandb.init(name='training', project='alert')
+wandb.init(name='training', project='alert', entity='')
 
 transform = transforms.Compose([transforms.Resize((48, 48)), transforms.ToTensor()])
 
