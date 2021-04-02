@@ -43,40 +43,47 @@ class Dataset(torch.utils.data.Dataset):
         return image, label
 
 
-def test(net, test_loader, threshold=1):
+def test(net, test_loader, threshold=0.51):
     device = torch.device('cuda' if torch.cuda.is_available else 'cpu')
     loss_func = torch.nn.BCELoss()
-    # correct = 0
-    #  total = 0
-    predictions = []
+
+    predictions = torch.Tensor([])
+    predictions_prob = torch.Tensor([])
+    labels = torch.Tensor([])
+
     test_loader = iter(test_loader)
     net = net.eval()
+
     with torch.no_grad():
         for idx, (image, label) in enumerate(tqdm_notebook(test_loader)):
             image = image.to(device)
             label = label.to(device)
+
             pred = net.forward(image)
+            pred_prob = pred
             pred = pred >= threshold
+            pred = pred.float()
 
             loss = loss_func(pred, label.unsqueeze(1))
 
-            predictions.append(pred)
+            predictions = torch.cat((predictions, pred))
+            predictions_prob = torch.cat((predictions_prob, pred_prob))
+            label1 = label.unsqueeze(1)
+            labels = torch.cat((labels, label1))
 
+    accuracy = accuracy_score(labels, predictions)
+    precision = precision_score(labels, predictions)
+    recall = recall_score(labels, predictions)
+    f1 = 2 * (recall * precision) / (recall + precision)
+    rocauc = roc_auc_score(labels, predictions_prob)
 
-            accuracy = accuracy_score(label.unsqueeze(1), pred)
-            precision = precision_score(label.unsqueeze(1), pred)
-            recall = recall_score(label.unsqueeze(1), pred)
-            f1 = 2 * (recall * precision) / (recall + precision)
-            rocauc = roc_auc_score(label.unsqueeze(1), pred)
+    print('Accuracy: %0.3f %% ' % (accuracy),
+          'Precision: %0.3f %% ' % (precision),
+          'Recall: %0.3f %% ' % (recall),
+          'F1: %0.3f %% ' % (f1),
+          'RocAUC: %0.3f %% ' % (rocauc)
+          )
 
-            # total += label.size(0)
-            # correct += int((pred == label)).sum().item()
-            print('Accuracy: %0.3f %% ' % (accuracy),
-                  'Precision: %0.3f %% ' % (precision),
-                  'Recall: %0.3f %% ' % (recall),
-                  'F1: %0.3f %% ' % (f1),
-                  'RocAUC: %0.3f %% ' % (rocauc)
-                  )
     return precision, recall, f1, rocauc
 
 
