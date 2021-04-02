@@ -68,8 +68,8 @@ def test(net, test_loader, threshold=0.51):
 
             predictions = torch.cat((predictions, pred))
             predictions_prob = torch.cat((predictions_prob, pred_prob))
-            label1 = label.unsqueeze(1)
-            labels = torch.cat((labels, label1))
+            label_unsq = label.unsqueeze(1)
+            labels = torch.cat((labels, label_unsq))
 
     accuracy = accuracy_score(labels, predictions)
     precision = precision_score(labels, predictions)
