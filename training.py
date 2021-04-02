@@ -90,16 +90,18 @@ def test(net, test_loader, threshold=0.51):
 
 
 def train(net, data_loader, test_loader, lr=0.001, num_epoch=20):
+
     device = torch.device('cuda' if torch.cuda.is_available else 'cpu')
     loss_func = torch.nn.BCELoss()
     optimizer = torch.optim.Adam(net.parameters(), lr=lr)
     scheduler = torch.optim.lr_scheduler.StepLR(optimizer=optimizer, step_size=10)
-    train_loader = iter(data_loader)
     net = net.to(device)
     best = 0
-    for epoch in tqdm(range(num_epoch)):
 
+    for epoch in tqdm(range(num_epoch)):
+        train_loader = iter(data_loader)
         train_loss = 0
+
         for idx, (image, label) in enumerate(tqdm(train_loader)):
             image = image.to(device)
             label = label.to(device)
