@@ -7,8 +7,8 @@ from alert import Alert
 
 random_seed(10)
 
-config = open('configs.yaml')
-congig = yaml.load(config, loader=yaml.FullLoader)
+with open('configs.yaml') as file:
+    config = yaml.load(file, loader=yaml.FullLoader)
 
 wandb.init(name='training', project='alert', entity='')
 
