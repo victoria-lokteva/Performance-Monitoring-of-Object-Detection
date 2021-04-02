@@ -1,7 +1,7 @@
 import numpy as np
 import torch
 from PIL import Image
-from tqdm import tqdm_notebook
+from tqdm.notebook import tqdm
 from sklearn.metrics import accuracy_score, precision_score, recall_score, roc_auc_score
 import wandb
 
@@ -50,12 +50,13 @@ def test(net, test_loader, threshold=0.51):
     predictions = torch.Tensor([])
     predictions_prob = torch.Tensor([])
     labels = torch.Tensor([])
+    test_loss = 0
 
     test_loader = iter(test_loader)
     net = net.eval()
 
     with torch.no_grad():
-        for idx, (image, label) in enumerate(tqdm_notebook(test_loader)):
+        for idx, (image, label) in enumerate(tqdm(test_loader)):
             image = image.to(device)
             label = label.to(device)
 
@@ -64,7 +65,8 @@ def test(net, test_loader, threshold=0.51):
             pred = pred >= threshold
             pred = pred.float()
 
-            test_loss = loss_func(pred, label.unsqueeze(1))
+            loss = loss_func(pred, label.unsqueeze(1))
+            test_loss += loss.item()
 
             predictions = torch.cat((predictions, pred))
             predictions_prob = torch.cat((predictions_prob, pred_prob))
@@ -95,14 +97,18 @@ def train(net, data_loader, test_loader, lr=0.001, num_epoch=20):
     train_loader = iter(data_loader)
     net = net.to(device)
     best = 0
-    for epoch in tqdm_notebook(range(num_epoch)):
-        for idx, (image, label) in enumerate(tqdm_notebook(train_loader)):
+    for epoch in tqdm(range(num_epoch)):
+
+        train_loss = 0
+        for idx, (image, label) in enumerate(tqdm(train_loader)):
             image = image.to(device)
             label = label.to(device)
             optimizer.zero_grad()
             outputs = net(image)
             loss = loss_func(outputs, label.unsqueeze(1))
             # outputs - > tensor[4,1],  label -> [4], label.unsqueze(1) ->[4,1]
+            train_loss += loss.item()
+
             loss.backward()
             optimizer.step()
             scheduler.step()
@@ -122,7 +128,7 @@ def train(net, data_loader, test_loader, lr=0.001, num_epoch=20):
             torch.save(dict, './model.pt')
 
         wandb.log({'Epoch': epoch,
-                   'Train_loss': loss,
+                   'Train_loss': train_loss,
                    'Test_loss' : test_loss,
                    'Precision' : precision,
                    'Recall' : recall,
