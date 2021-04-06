@@ -1,7 +1,7 @@
 import numpy as np
 import torch
 from PIL import Image
-from tqdm.notebook import tqdm
+from tqdm import tqdm as tqdm
 from sklearn.metrics import accuracy_score, precision_score, recall_score, roc_auc_score
 import wandb
 

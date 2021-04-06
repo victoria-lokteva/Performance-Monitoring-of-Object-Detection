@@ -7,19 +7,19 @@ from alert import Alert
 
 random_seed(10)
 
-with open('configs.yaml') as file:
-    config = yaml.load(file, loader=yaml.FullLoader)
+with open('configs/configs.yaml', 'r') as file:
+    config = yaml.load(file, Loader=yaml.FullLoader)
 
-wandb.init(name='training', project='alert', entity='')
+wandb.init(name='training', project='alert', entity='lichtundschatten')
 
 transform = transforms.Compose([transforms.Resize((48, 48)), transforms.ToTensor()])
 
-train_data = Dataset(filename_img, filename_labels, transform)
-test_data = Dataset(test_filename_img, test_filename_labels, transform)
+train_data = Dataset(config['experiment']['filename_img'], config['experiment']['filename_labels'], transform)
+test_data = Dataset(config['experiment']['test_filename_img'], config['experiment']['test_filename_labels'], transform)
 
-data_loader = torch.utils.data.DataLoader(train_data, batch_size)
-test_loader = torch.utils.data.DataLoader(test_data, batch_size)
+data_loader = torch.utils.data.DataLoader(train_data, config['experiment']['batch_size'])
+test_loader = torch.utils.data.DataLoader(test_data, config['experiment']['batch_size'])
 
-net = Alert(initialization)
+net = Alert(initialization='normal')
 
-train(net, data_loader, test_loader)
+train(net, data_loader, test_loader, num_epoch=config['experiment']['num_epochs'])

@@ -3,11 +3,11 @@ experiment_name: training_alert
 savepath:
 
 experiment:
-  filename_img:
-  filename_labels:
-  test_filename_img:
-  test_filename_labels:
-  batch_size: 12
+  filename_img: testing_alert/images.txt
+  filename_labels: testing_alert/labels.txt
+  test_filename_img: testing_alert/images.txt
+  test_filename_labels: testing_alert/labels.txt
+  batch_size: 4
   num_epochs: 100
   lr: 0.001   
   initialization: 'normal'
