@@ -43,13 +43,12 @@ class Dataset(torch.utils.data.Dataset):
         return image, label
 
 
-def test(net, test_loader, threshold=0.51):
-    device = torch.device('cuda' if torch.cuda.is_available else 'cpu')
+def test(net, test_loader, device, threshold=0.51):
     loss_func = torch.nn.BCELoss()
 
-    predictions = torch.Tensor([])
-    predictions_prob = torch.Tensor([])
-    labels = torch.Tensor([])
+    predictions = []
+    predictions_prob = []
+    labels = []
     test_loss = 0
 
     test_loader = iter(test_loader)
@@ -68,10 +67,9 @@ def test(net, test_loader, threshold=0.51):
             loss = loss_func(pred, label.unsqueeze(1))
             test_loss += loss.item()
 
-            predictions = torch.cat((predictions, pred))
-            predictions_prob = torch.cat((predictions_prob, pred_prob))
-            label_unsq = label.unsqueeze(1)
-            labels = torch.cat((labels, label_unsq))
+            predictions.extend(pred.squeeze().tolist())
+            predictions_prob.extend(pred_prob.squeeze().tolist())
+            labels.extend(label.tolist())
 
     accuracy = accuracy_score(labels, predictions)
     precision = precision_score(labels, predictions)
@@ -91,11 +89,11 @@ def test(net, test_loader, threshold=0.51):
 
 def train(net, data_loader, test_loader, lr=0.001, num_epoch=20):
 
-    device = torch.device('cuda' if torch.cuda.is_available else 'cpu')
+    device = torch.device('cuda:1' if torch.cuda.is_available else 'cpu')
+    net = net.to(device)
     loss_func = torch.nn.BCELoss()
     optimizer = torch.optim.Adam(net.parameters(), lr=lr)
     scheduler = torch.optim.lr_scheduler.StepLR(optimizer=optimizer, step_size=10)
-    net = net.to(device)
     best = 0
 
     for epoch in tqdm(range(num_epoch)):
@@ -115,7 +113,7 @@ def train(net, data_loader, test_loader, lr=0.001, num_epoch=20):
             optimizer.step()
             scheduler.step()
 
-        precision, recall, f1, rocauc, test_loss = test(net, test_loader)
+        precision, recall, f1, rocauc, test_loss = test(net, test_loader, device)
         current = f1
         if current > best:
             best = current

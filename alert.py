@@ -40,7 +40,6 @@ class Alert(nn.Module):
 
     def statistical_pooling(self, x):
         std = torch.std(x,dim=(2,3))  # (B*C*H*W) -> (B*C)
-        print(std.size())
         return std
 
     def mean_max_std(self, x):
@@ -52,11 +51,13 @@ class Alert(nn.Module):
         return torch.cat((mean, maximum, std), dim=1) #-> (B*(3*C))
 
     def forward(self, x):
-
+        ###
+        # x1 is used only for testing:
+        x1 = self.mean_max_std(x)
+        ###
         x = self.mean_max_std(x)
         ###
-        # add extra channels for testing:
-        x1 = self.mean_max_std(x)
+        # add extra channels for testing
         for i in range(127):
             x = torch.cat((x,x1), dim=1)
         ###

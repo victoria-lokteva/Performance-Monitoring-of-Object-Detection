@@ -5,6 +5,9 @@ import yaml
 from training import  random_seed, Dataset, train
 from alert import Alert
 
+import pathlib
+print(pathlib.Path().absolute())
+
 random_seed(10)
 
 with open('configs/configs.yaml', 'r') as file:
