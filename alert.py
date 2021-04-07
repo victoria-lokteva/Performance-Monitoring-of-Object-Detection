@@ -7,9 +7,9 @@ class Alert(nn.Module):
     def __init__(self, width=48, height=48, initialization=None, num_channels=384):
         super().__init__()
         if initialization == 'normal':
-            initialize_weights = nn.init.xavier_normal
+            initialize_weights = nn.init.xavier_normal_
         elif initialization == 'uniform':
-            initialize_weights = nn.init.xavier_uniform
+            initialize_weights = nn.init.xavier_uniform_
         elif initialization is None:
             pass
         else:
@@ -69,6 +69,6 @@ class Alert(nn.Module):
         x = self.bn3(x)
         x = F.relu(self.fc4(x))
         x = self.bn4(x)
-        x = F.sigmoid(self.fc5(x))
+        x = torch.sigmoid(self.fc5(x))
         return x
 
