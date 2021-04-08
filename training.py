@@ -66,7 +66,6 @@ def test(net, test_loader, device, threshold=0.51):
 
             loss = loss_func(pred, label.unsqueeze(1))
             test_loss += loss.item()
-
             predictions.extend(pred.squeeze().tolist())
             predictions_prob.extend(pred_prob.squeeze().tolist())
             labels.extend(label.tolist())
@@ -87,13 +86,13 @@ def test(net, test_loader, device, threshold=0.51):
     return precision, recall, f1, rocauc, test_loss
 
 
-def train(net, data_loader, test_loader, lr=0.001, num_epoch=20):
+def train(net, data_loader, test_loader, step, device_name, lr=0.001, num_epoch=20):
 
-    device = torch.device('cuda:1' if torch.cuda.is_available else 'cpu')
+    device = torch.device(device_name if torch.cuda.is_available else 'cpu')
     net = net.to(device)
     loss_func = torch.nn.BCELoss()
     optimizer = torch.optim.Adam(net.parameters(), lr=lr)
-    scheduler = torch.optim.lr_scheduler.StepLR(optimizer=optimizer, step_size=10)
+    scheduler = torch.optim.lr_scheduler.StepLR(optimizer=optimizer, step_size=step)
     best = 0
 
     for epoch in tqdm(range(num_epoch)):
@@ -135,4 +134,9 @@ def train(net, data_loader, test_loader, lr=0.001, num_epoch=20):
                    'F1' : f1,
                    'RocAUC': rocauc
                    })
+
+        artifact = wandb.Artifact('ml_perceptron', type='model')
+        artifact.add_file('./model.pt')
+        artifact.save()
+
     return net

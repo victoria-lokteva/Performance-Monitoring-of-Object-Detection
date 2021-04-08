@@ -11,3 +11,7 @@ experiment:
   num_epochs: 100
   lr: 0.001   
   initialization: 'normal'
+  random_seed: 10
+  step: 10
+  id: 0
+  device_name: 'cuda:1'

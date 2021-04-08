@@ -8,12 +8,19 @@ from alert import Alert
 import pathlib
 print(pathlib.Path().absolute())
 
-random_seed(10)
-
 with open('configs/configs.yaml', 'r') as file:
     config = yaml.load(file, Loader=yaml.FullLoader)
 
-wandb.init(name='training', project='alert', entity='lichtundschatten')
+random_seed(config['experiment']['random_seed'])
+
+id = config['experiment']['id'],
+train_name = 'training' + str(id)
+config['experiment']['id'] += 1
+
+with open('configs/configs.yaml', 'w') as file:
+    yaml.dump(config, file)
+
+wandb.init(name=train_name, project='alert', entity='lichtundschatten')
 
 transform = transforms.Compose([transforms.Resize((48, 48)), transforms.ToTensor()])
 
@@ -25,4 +32,5 @@ test_loader = torch.utils.data.DataLoader(test_data, config['experiment']['batch
 
 net = Alert(initialization='normal')
 
-train(net, data_loader, test_loader, num_epoch=config['experiment']['num_epochs'])
+train(net, data_loader, test_loader, config['experiment']['step'], config['experiment']['device_name'],
+      num_epoch=config['experiment']['num_epochs'])
