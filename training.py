@@ -88,7 +88,7 @@ def test(net, test_loader, device, threshold=0.51):
 
 def train(net, data_loader, test_loader, step, device_name, lr=0.001, num_epoch=20):
 
-    device = torch.device(device_name if torch.cuda.is_available else 'cpu')
+    device = torch.device(device_name if torch.cuda.is_available() else 'cpu')
     net = net.to(device)
     loss_func = torch.nn.BCELoss()
     optimizer = torch.optim.Adam(net.parameters(), lr=lr)
